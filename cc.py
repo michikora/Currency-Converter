@@ -1,6 +1,6 @@
 import requests
 from wox import Wox,WoxAPI
-import clipboard
+import os
 from os.path import dirname, join
 import pycountry
 from bs4 import BeautifulSoup
@@ -10,32 +10,28 @@ a=""
 
 class Main(Wox):
 	icon = join(dirname(__file__), 'Images', 'plugin.png')
-	def request(self,url):
-		#f*k off auto extraction prohibited error
-		headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64)'}
-		return requests.get(url, headers=headers)
-	
 	def query(self,query):
 		results=[]
 		args = query.split(' ')
 		if len(args)==3 and len(args[1])==3 and len(args[2])==3:
 			url = ('http://www.xe.com/currencyconverter/convert/?Amount=1&From=%s&To=%s') % (args[1], args[2])
-			r = self.request(url)
+			r = requests.get(url)
 			soup = BeautifulSoup(r.text, "html.parser")
-			data = soup.find('td', attrs={'class':'rightCol'})
-			m=re.findall(r'[\w.]+',data.text)
-			a=m[0]
+			data = soup.find('span', attrs={'class':'uccResultAmount'})
+			a = data.text
 			try:
 				a=float(a)
 				b=float(args[0])*a
 				c=args[2]
+
 				pass
-			except Exception, e:
+			except Exception as e:
 				b="Invalid amount"
 				c="" 
 				pass
 			finally:
 				pass
+
 			results=[]
 			if b>0.000001 and b!="Invalid amount":
 				c=c.upper()
@@ -81,11 +77,11 @@ class Main(Wox):
         		"SubTitle":"How may I take your order?",
         		"IcoPath":"Images/plugin.png"
         	})
-    		return results		
+			return results
    
 	def copy(self, data):
-		clipboard.put(data)
-		WoxAPI.show_msg("Value has been copied to clipboard.", '', self.icon)
+		command = 'echo ' + data.strip() + '| clip'
+		os.system(command)
 
 if __name__ == "__main__":
 	Main()
